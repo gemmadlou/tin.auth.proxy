@@ -1,9 +1,8 @@
-import { ofetch } from "ofetch";
 import jwt from "jsonwebtoken";
 import jwksClient from "jwks-rsa";
 
 export default eventHandler(async (event) => {
-  let targetUrl = (process.env.PROXY_TARGET_URL ?? "http://localhost:5173/")
+  let targetUrl = (process.env.PROXY_TARGET_URL)
     .replace(/\/$/g, '') + event.path
 
   let sessionCookie = getCookie(event, "__session");
@@ -11,9 +10,10 @@ export default eventHandler(async (event) => {
   let jwkUrl = process.env.JWK_URL
 
   if (sessionCookie === undefined) {
-    setResponseStatus(event, 401)
-    return { error: "not signed in" };
+    return await proxyRequest(event, process.env.AUTH_FE_URL)
   }
+
+  let decoded;
 
   try {
     const client = jwksClient({
@@ -24,13 +24,16 @@ export default eventHandler(async (event) => {
 
     let key = await client.getSigningKey()
 
-    let decoded = jwt.verify(sessionCookie, await key.getPublicKey())
+    decoded = jwt.verify(sessionCookie, await key.getPublicKey())
 
-    console.log({ decoded })
-
-    return await proxyRequest(event, targetUrl)
   } catch (error) {
-    setResponseStatus(event, 403)
-    return { error: "invalidToken" }
+    console.log({ error }, process.env.AUTH_FE_URL)
+    return await proxyRequest(event, process.env.AUTH_FE_URL)
   }
+
+  return await proxyRequest(event, targetUrl, {
+    headers: {
+      user_id: decoded.sub.toString() 
+    }
+  })
 })
