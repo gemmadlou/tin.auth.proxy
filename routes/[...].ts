@@ -17,8 +17,8 @@ export default eventHandler(async (event) => {
 
   try {
     const client = jwksClient({
-      // rateLimit: true,
-      // jwksRequestsPerMinute: 10, // Default value
+      rateLimit: true,
+      jwksRequestsPerMinute: 5,
       jwksUri: process.env.JWK_URL
     });
 
