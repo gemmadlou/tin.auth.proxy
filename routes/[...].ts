@@ -2,38 +2,47 @@ import jwt from "jsonwebtoken";
 import jwksClient from "jwks-rsa";
 
 export default eventHandler(async (event) => {
-  let targetUrl = (process.env.PROXY_TARGET_URL)
-    .replace(/\/$/g, '') + event.path
+
+  let isExcludedPath = (new RegExp(/.jpg|.png|.jpef|.+nuxt/)).test(event.path)
 
   let sessionCookie = getCookie(event, "__session");
 
   let jwkUrl = process.env.JWK_URL
 
   if (sessionCookie === undefined) {
-    return await proxyRequest(event, process.env.AUTH_FE_URL)
+    return await proxyRequest(event, process.env.AUTH_FE_URL.replace(/\/$/g, '') + event.path)
   }
 
-  let decoded;
+  let targetUrl = (process.env.PROXY_TARGET_URL)
+    .replace(/\/$/g, '') + event.path
 
-  try {
-    const client = jwksClient({
-      rateLimit: true,
-      jwksRequestsPerMinute: 5,
-      jwksUri: process.env.JWK_URL
-    });
+  if (!isExcludedPath) {
+    let decoded;
 
-    let key = await client.getSigningKey()
+    try {
+      const client = jwksClient({
+        rateLimit: true,
+        jwksRequestsPerMinute: 5,
+        jwksUri: process.env.JWK_URL
+      });
 
-    decoded = jwt.verify(sessionCookie, await key.getPublicKey())
+      let key = await client.getSigningKey()
 
-  } catch (error) {
-    console.log({ error }, process.env.AUTH_FE_URL)
-    return await proxyRequest(event, process.env.AUTH_FE_URL)
-  }
+      decoded = jwt.verify(sessionCookie, await key.getPublicKey())
 
-  return await proxyRequest(event, targetUrl, {
-    headers: {
-      user_id: decoded.sub.toString() 
+    } catch (error) {
+      console.log({ error }, process.env.AUTH_FE_URL)
+      return await proxyRequest(event, process.env.AUTH_FE_URL.replace(/\/$/g, '') + event.path)
     }
-  })
+
+    return await proxyRequest(event, targetUrl, {
+      headers: {
+        user_id: decoded?.sub?.toString()
+      }
+    })
+
+  }
+
+  return await proxyRequest(event, targetUrl)
+
 })
