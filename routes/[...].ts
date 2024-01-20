@@ -18,7 +18,9 @@ export default eventHandler(async (event) => {
 
   return await proxyRequest(event, targetUrl, {
     headers: {
-      "X-Forwarded-User": event.context?.auth?.sub?.toString()
+      "X-Forwarded-User": event.context?.auth?.sub?.toString(),
+      "X-Forwarded-Tenant": event.context?.auth?.org_id?.toString(),
+      "X-Forwarded-Tenant-Role": event.context?.auth?.org_role?.toString()
     }
   })
 
