@@ -90,6 +90,18 @@ Start the proxy server.
 yarn dev
 ```
 
+## Extra
+
+Add a logout button to your application.
+
+> It must go to the `/session`.
+
+```html
+<a href="/session">
+    Log out
+</a>
+```
+
 
 ## Development
 
