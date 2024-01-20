@@ -2,13 +2,12 @@ import jwksClient from "jwks-rsa";
 import jwt from "jsonwebtoken";
 
 export default defineEventHandler(async (event) => {
+    event.context.auth = undefined;
+    event.context.skipAuth = false;
+
     let sessionCookie = getCookie(event, "__session");
 
-    let isExcludedPath = (new RegExp(/.jpg|.png|.jpef|._nuxt|.svg|.css|node_modules/))
-        .test(event.path)
-
-    if (sessionCookie && !isExcludedPath) {
-
+    if (sessionCookie) {
         try {
             const client = jwksClient({
                 rateLimit: true,
@@ -20,12 +19,12 @@ export default defineEventHandler(async (event) => {
 
             event.context.auth = jwt.verify(sessionCookie, await key.getPublicKey())
 
+            console.debug('Cookie handled', event.path)
+
         } catch (error) {
-            console.log({ error }, process.env.AUTH_FE_URL, event.path, "expired")
+            console.error('Cookie handling error', { error }, process.env.AUTH_FE_URL, event.path)
         }
 
-    } else if (isExcludedPath) {
-        event.context.skipAuth = true
     }
     
 })  
