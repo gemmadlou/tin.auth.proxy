@@ -12,7 +12,7 @@ export default eventHandler(async (event) => {
 
   return await proxyRequest(event, targetUrl, {
     headers: {
-      user_id: event.context?.auth?.sub?.toString()
+      "X-Forwarded-User": event.context?.auth?.sub?.toString()
     }
   })
 

@@ -4,7 +4,8 @@ import jwt from "jsonwebtoken";
 export default defineEventHandler(async (event) => {
     let sessionCookie = getCookie(event, "__session");
 
-    let isExcludedPath = (new RegExp(/.jpg|.png|.jpef|._nuxt|.svg|.css|node_modules/)).test(event.path)
+    let isExcludedPath = (new RegExp(/.jpg|.png|.jpef|._nuxt|.svg|.css|node_modules/))
+        .test(event.path)
 
     if (sessionCookie && !isExcludedPath) {
 
