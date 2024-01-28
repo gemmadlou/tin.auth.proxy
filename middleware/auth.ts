@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 
 export default defineEventHandler(async (event) => {
     event.context.auth = undefined;
-    event.context.skipAuth = false;
 
     let sessionCookie = getCookie(event, "__session");
 
