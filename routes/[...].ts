@@ -10,6 +10,10 @@ export default eventHandler(async (event) => {
 
   if (!event.context.auth) {
     console.log('Auth required', event.path)
+    if (event.headers.get("content-type") === "application/json") {
+      setResponseStatus(event, 401);
+      return
+    }
     return await sendRedirect(event, "/session");
   }
 
